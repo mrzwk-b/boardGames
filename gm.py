@@ -1,45 +1,14 @@
+# in the process of being eliminated from the project altogether
+
 import random
-import ai
+import player.bot as bot
+
 
 def opp(player, number):
     if player + 1 == number:
         return 0
     else:
         return player + 1
-
-def pickPiece(count,aiNum):
-    players = []
-    ais = []
-    p = 0
-    while p < count - aiNum:
-        invalid = True
-        while invalid:
-            print('Player ' + str(p + 1) + ': Enter your symbol')
-            chose = input()
-            if len(chose) > 1:
-                print('it\'s 1 character only you greedy ho')
-            else:
-                if chose in players:
-                    print('that one\'s taken')
-                else:
-                    players.append(chose)
-                    p += 1
-                    invalid = False
-    while p < count:
-        invalid = True
-        while invalid:
-            chose = random.choice([';','#','$','&','*','@','%','^','!','?','+','=','<','>','~','-'])
-            if chose not in players:
-                players.append(chose)
-                valid = False
-                while not valid:
-                    iD = random.randint(0,99)
-                    if iD not in [item.char for item in ais]:
-                        valid = True                        
-                ais.append(ai.Jeur(iD,players.index(chose),chose))
-                p += 1
-                invalid = False
-    return (players,ais)
 
 def getMove(moves,aiTurn,data,disp):
     legal = moves[0]

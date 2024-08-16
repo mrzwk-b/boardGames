@@ -1,43 +1,94 @@
+# in the process of being cleaned and converted into object-oriented code
+
 import random
 import gm
 import numpy as np
-import ai
+from .game import Game
 
-def getBoard(p):
-    global board
-    st = ''
-    for i in range(board[(0,3)]):
-        st += p[0]
-    st += '\n'
-    st += '   1  2  3  4  5  6  7  8 \n'
-    st += '   _  _        _  _  _  _ \n'
-    for row in range(3):
-        st += ['a','b','c'][row] + ' '
-        for column in range(8):
-            tile = (row,column)
-            if board[tile] == 1:
-                mid = p[0]
-            elif board[tile] == -1:
-                mid = p[1]
-            else:
-                mid = '_'
-            if tile in rosette:
-                wall = ['<','>']
-            elif column in [2,3]:
-                if row != 1:
-                    wall = [' ',' ']
-                if row == 2:
-                    mid = ' '
-                if row == 0:
+class GameOfUr(Game):
+    name = "Royal Game of Ur"
+    numPlayers = 2
+    reservedChars = {' ', '_', '|'}
+
+    def __init__(self, players) -> None:
+        super().__init__(players)
+        random.shuffle(self.players)
+
+        pass
+    
+    def getBoard(self): # TODO
+        st = ''
+        for i in range(board[(0,3)]):
+            st += p[0]
+        st += '\n'
+        st += '   1  2  3  4  5  6  7  8 \n'
+        st += '   _  _        _  _  _  _ \n'
+        for row in range(3):
+            st += ['a','b','c'][row] + ' '
+            for column in range(8):
+                tile = (row,column)
+                if board[tile] == 1:
+                    mid = p[0]
+                elif board[tile] == -1:
+                    mid = p[1]
+                else:
                     mid = '_'
-            else:
-                wall = ['|','|']
-            st += wall[0] + mid + wall[1]
-            if column == 7:
-                st += '\n'
-    for j in range(abs(board[(2,3)])):
-        st += p[1]
-    return st
+                if tile in rosette:
+                    wall = ['<','>']
+                elif column in [2,3]:
+                    if row != 1:
+                        wall = [' ',' ']
+                    if row == 2:
+                        mid = ' '
+                    if row == 0:
+                        mid = '_'
+                else:
+                    wall = ['|','|']
+                st += wall[0] + mid + wall[1]
+                if column == 7:
+                    st += '\n'
+        for j in range(abs(self.board[(2,3)])):
+            st += p[1]
+        return st
+
+    def play(self):
+
+        # define board and put all pieces on their starts
+        self.board = np.zeros((3,8),int)
+        self.rosettes = {(0,1), (0,7), (1,3), (2,1), (2,7)}
+        self.board[(0,3)] += 7
+        self.board[(2,3)] -= 7
+        
+        turnIndex: int = 0 # used to index into self.players, marks whose turn it is
+        while True:
+            print(self.getBoard())
+
+            aiTurn = False
+            for item in ais:
+                if p[turnIndex] == item.char:
+                    aiTurn = item
+
+            roll = random.randint(0,1)+random.randint(0,1)+random.randint(0,1)+random.randint(0,1)
+            resMove(gm.getMove(checkMoves(roll),aiTurn,board,disp),p)
+
+            score = [board[(0,2)],-1*board[(2,2)]]
+            print('Player 1\'s score: ' + str(score[0]))
+            print('Player 2\'s score: ' + str(score[1]))
+            sanityCheck()
+            if score[0] == 7 or score[1] == 7:
+                break
+
+            turnIndex = gm.opp(turnIndex,2)
+
+        for player in score:
+            if player == 7:
+                print('Player ' + str(score.index(player) + 1) + ' wins!')
+
+        pass
+
+    pass
+
+
 
 def checkMoves(roll):
     global board
@@ -141,48 +192,3 @@ def pnz(t):
         return -1
     else:
         return 0
-
-def gameplay(p,ais):
-    global board
-    global rosette
-    global disp
-    global turn
-    global aiTurn
-    global score
-    board = np.zeros((3,8),int)
-    board[(0,3)] += 7
-    board[(2,3)] -= 7
-    rosette = [(0,1),(0,7),(1,3),(2,1),(2,7)]
-    if len(ais)  == 2:
-        disp = False
-    else:
-        disp = True
-    turn = 0
-    score = [0,0]
-    while True:
-        if disp:
-            print(getBoard(p))
-        aiTurn = False
-        for item in ais:
-            if p[turn] == item.char:
-                aiTurn = item
-        roll = random.randint(0,1)+random.randint(0,1)+random.randint(0,1)+random.randint(0,1)
-        resMove(gm.getMove(checkMoves(roll),aiTurn,board,disp),p)
-        score = [board[(0,2)],-1*board[(2,2)]]
-        if disp:
-            print('Player 1\'s score: ' + str(score[0]))
-            print('Player 2\'s score: ' + str(score[1]))
-        sanityCheck()
-        if score[0] == 7 or score[1] == 7:
-            break
-        turn = gm.opp(turn,2)
-    for player in score:
-        if player == 7:
-            if disp:
-                print('Player ' + str(score.index(player) + 1) + ' wins!')
-            if len(ais) == 2:
-                vict = score.index(7)
-                losr = gm.opp(vict,2)
-                ais[losr].evolve(score[losr]-7)
-                ais[vict].evolve(7-score[losr])
-        
