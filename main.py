@@ -1,14 +1,11 @@
-from game.game import Game
-from game.gameOfUr import GameOfUr
-from game.checkers import Checkers
-from player.player import Player
-from player.human import Human
-from player.bot import Bot
+from core.game import Game
+from core.player.player import Player
+from core.player.human import Human
+from core.player.bot import Bot
 from util import getInput
-
+from org import games, bots
 from typing import Type
 
-games: list[Type[Game] | None] = [None, GameOfUr, Checkers]
 while True:
     
     print('select game:')
@@ -26,9 +23,10 @@ while True:
     for i in range(numHumans):
         players.append(Human())
     for i in range(gameChoice.numPlayers - numHumans):
-        players.append(Bot())
+        players.append(bots[gameChoice]())
 
-    game = gameChoice(players)
+    game = gameChoice()
+    game.setup(players)
     game.play()
 
     pass

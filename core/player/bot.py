@@ -7,10 +7,5 @@ class Bot(Player):
         self.symbol = random.choice(list({'!','@','#','$','%','^','&','*','?','+','=','~'} - reservedChars))
         return super().pickSymbol(reservedChars)
 
-    def randMove(legal):
-        options = []
-        for m in legal:
-            if m not in options:
-                options.append(m)
-        move = random.choice(options)
-        return move
+    def randMove(legal: set):
+        return random.choice(list(legal))

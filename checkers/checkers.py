@@ -1,5 +1,5 @@
 import random
-from .game import Game
+from core.game import Game
 
 class Checkers(Game):
     name = "Checkers"
