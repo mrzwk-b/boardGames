@@ -1,77 +1,51 @@
 from core.game import Game
-from .gameOfUrState import GameOfUrState as GouState
-import random
+from gameOfUr.gameOfUrBoard import GameOfUrBoard as GouBoard
+from gameOfUr.gameOfUrState import GameOfUrState as GouState
+from util import InputWindow
 
 class GameOfUr(Game):
     name = "Royal Game of Ur"
     numPlayers = 2
-    reservedChars = {' ', '_', '|', '{', '}'}
+    reservedChars = {' ', '_', '|', '$'} 
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, players) -> None:
+        super().__init__(players)
         self.state: GouState = GouState()
-    
-    def getRow(self, row: int) -> str:
-        output = [['a','b','c'][row], ' ']
-        for column in range(8):
-            output.extend([
-                ( # left wall
-                        '{' 
-                    if (row, column) in self.state.rosettes else 
-                        ' ' 
-                    if column in range(2,4) and row != 1 else 
-                        '|'
-                ), ( # piece, if present
-                        ' '
-                    if self.state.board[(row, column)] == 0 or (column in range(2,4) and row != 1) else 
-                        self.players[self.state.board[(row, column)] == -1].symbol
-                ), ( # right wall
-                        '}' 
-                    if (row, column) in self.state.rosettes else 
-                        ' ' 
-                    if column in range(2,4) and row != 1 else 
-                        '|'
-                )
-            ])
-        return ''.join(output) + '\n'
-
-    def getBoard(self) -> str:
-        output = "   1  2  3  4  5  6  7  8 \n"
-        for row in range(3):
-            output += self.getRow(row)
-        scores = self.state.getScores()
-        output += f"player 1 score: {scores[0]}\n"
-        output += f"player 2 score: {scores[1]}\n"
-        return output
+        self.board: GouBoard = GouBoard(self.state, (self.players[0].symbol, self.players[1].symbol))
 
     def play(self):
         turnIndex: int = 0 # used to index into self.players, marks whose turn it is
         while True:
-            self.state.roll = sum([random.randint(0,1) for _ in range(4)])
+            self.state.reroll()
 
-            capture, rosette = self.state.resolveMove(self.players[turnIndex].decide(self.state,
-                f'{self.getBoard()}'
-                f'roll: {self.state.roll}\n'
-                'enter one of the following:\n'
-                '  "new" to send a new piece onto the board,\n'
-                '  "pass" to skip your turn,\n'
-                '  or the coordinates of a piece to move'
+            onRosette = self.state.resolveMove(self.players[turnIndex].decide(
+                self.state,
+                yBegin = self.board.window.getmaxyx()[0],
+                prompt = [
+                    f'roll: {self.state.roll}',
+                    'enter one of the following:',
+                    '  "new" to send a new piece onto the board,',
+                    '  "pass" to skip your turn,',
+                    '  or the coordinates of a piece to move',
+                ],
             ))
-
-            if capture:
-                self.state.sendHome()
 
             if self.state.getScores()[turnIndex] == 7:
                 self.winnerIndex = turnIndex
                 break
 
-            if not rosette:
+            if not onRosette:
                 turnIndex = 1 - turnIndex
                 self.state.passTurn()
 
             self.state.sanityCheck()
+            self.board.reflectState()
 
-        print(f"player {str(self.winnerIndex + 1)} wins!")
-        scores = self.state.getScores()
-        for i in range(2):
-            print(f"player {str(i+1)} score: {scores[i]}\n")
+        self.board.reflectState()
+        endDisplay = InputWindow(self.board.window.getmaxyx()[0], 0, [
+            f"player {self.winnerIndex + 1} wins!",
+             "press enter to continue"
+        ])
+        endDisplay.getInput(lambda reply: True)
+        endDisplay.erase()
+        self.board.erase()
